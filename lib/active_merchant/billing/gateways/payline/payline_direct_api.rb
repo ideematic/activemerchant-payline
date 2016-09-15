@@ -10,9 +10,9 @@ module ActiveMerchant
         'switch'           => 'SWITCH',
         'maestro'          => 'MAESTRO'
       ).freeze
-      
+
       EXPIRATION_DATE_FORMAT = "%.2d%.2d".freeze
-      
+
       def do_authorization(money, credit_card, options = {})
         requires!(options, :order_id)
         currency = currency_code(options[:currency])
@@ -31,7 +31,15 @@ module ActiveMerchant
         end
       end
       alias_method :capture, :do_capture
-      
+
+      def do_refund(money, authorization, options = {})
+        direct_api_request :do_refund do |xml|
+          xml.transactionID authorization
+          add_payment(xml, money, currency_code(options[:currency]), 421, options[:mode])
+        end
+      end
+      alias_method :capture, :do_capture
+
       def do_reset(authorization, options = {})
         direct_api_request :do_reset do |xml|
           add_version(xml)
@@ -39,7 +47,7 @@ module ActiveMerchant
         end
       end
       alias_method :void, :do_reset
-      
+
       def do_recurrent_wallet_payment(money, wallet_id, options = {})
         currency = currency_code(options[:currency])
         direct_api_request :do_recurrent_wallet_payment do |xml|
@@ -55,30 +63,30 @@ module ActiveMerchant
           end
         end
       end
-      
+
       def get_recurrent_payment_responses(payment_record_id)
         response = get_payment_record(payment_record_id)
         responses = response.params[:billing_record_list][:billing_record]
         Array.wrap(responses).collect { |r| build_response(r) if r[:result] }.compact
       end
-      
+
       def get_payment_record(payment_record_id)
         payment_record_request :get, payment_record_id
       end
-      
+
       def disable_payment_record(payment_record_id)
         payment_record_request :disable, payment_record_id
       end
-      
+
       protected
         def direct_api_request(method_name, &block)
           request(direct_api_savon_client, method_name, &block)
         end
-        
+
         def direct_api_savon_client
           @direct_api_savon_client ||= create_savon_client(test? ? test_url : live_url)
         end
-        
+
         def add_credit_card(xml, card)
           xml.card do
             xml.obj :number, card.number
@@ -87,11 +95,11 @@ module ActiveMerchant
             xml.obj :cvx, card.verification_value
           end
         end
-        
+
         def expiration_date(month, year)
           EXPIRATION_DATE_FORMAT % [month, year.to_s[-2..-1]]
         end
-        
+
         def payment_record_request(method_name, payment_record_id)
           direct_api_request :"#{method_name}_payment_record" do |xml|
             xml.contractNumber contract_number
