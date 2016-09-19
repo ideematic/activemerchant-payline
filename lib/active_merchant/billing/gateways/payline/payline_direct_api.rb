@@ -38,7 +38,7 @@ module ActiveMerchant
           add_payment(xml, money, currency_code(options[:currency]), 421, options[:mode])
         end
       end
-      alias_method :capture, :do_capture
+      alias_method :refund, :do_refund
 
       def do_reset(authorization, options = {})
         direct_api_request :do_reset do |xml|
