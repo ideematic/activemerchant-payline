@@ -16,7 +16,7 @@ module ActiveMerchant
       alias_method :setup_purchase, :do_web_payment
 
       def get_web_payment_details(token)
-        web_api_request :get_web_payment_detail do |xml|
+        web_api_request :get_web_payment_details do |xml|
           xml.token token
         end
       end
