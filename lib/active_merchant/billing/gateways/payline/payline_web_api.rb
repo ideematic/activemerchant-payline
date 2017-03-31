@@ -2,7 +2,7 @@ module ActiveMerchant
   module Billing
     module PaylineWebAPI
       SSL = 'SSL'.freeze
-      
+
       def do_web_payment(money, options = {})
         currency = currency_code(options[:currency])
         web_api_request :do_web_payment do |xml|
@@ -14,7 +14,14 @@ module ActiveMerchant
         end
       end
       alias_method :setup_purchase, :do_web_payment
-      
+
+      def get_web_payment_details(token)
+        web_api_request :get_web_payment_detail do |xml|
+          xml.token token
+        end
+      end
+
+
       # :wallet_id [String] alpha-numeric 50 chars max
       # :locale [String, Symbol] ISO 639-1 locale code
       # :return_url (*)
@@ -58,11 +65,11 @@ module ActiveMerchant
         def web_api_request(method_name, &block)
           request(web_api_savon_client, method_name, &block)
         end
-        
+
         def web_api_savon_client
           @web_api_savon_client ||= create_savon_client(test? ? web_test_url : web_live_url)
         end
-        
+
         def web_wallet_request(method_name, options)
           web_api_request :"#{method_name}_web_wallet" do |xml|
             xml.contractNumber contract_number
@@ -70,7 +77,7 @@ module ActiveMerchant
             add_web_params(xml, options)
           end
         end
-        
+
         def add_web_params(xml, options)
           xml.languageCode language_code(options[:locale])
           xml.securityMode SSL
