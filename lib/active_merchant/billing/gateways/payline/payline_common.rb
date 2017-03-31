@@ -170,7 +170,7 @@ module ActiveMerchant
         end
 
         def add_version(xml)
-          xml.version WEB_API_VERSION
+          # xml.version WEB_API_VERSION
         end
 
         def add_payment(xml, money, currency, action, mode = nil)
@@ -183,7 +183,7 @@ module ActiveMerchant
           end
 
           xml.selectedContractList do
-            xml.obj :selectedContractList, contract_number
+            xml.obj :selectedContract, contract_number
           end
         end
 
