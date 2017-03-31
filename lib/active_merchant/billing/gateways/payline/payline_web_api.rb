@@ -17,6 +17,7 @@ module ActiveMerchant
 
       def get_web_payment_details(token)
         web_api_request :get_web_payment_details do |xml|
+          add_version(xml)
           xml.token token
         end
       end

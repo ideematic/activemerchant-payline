@@ -68,13 +68,15 @@ module ActiveMerchant
 
       protected
         def request(client, method_name)
+
           response = client.request :"#{method_name}_request" do
             soap.namespaces[:xmlns] = IMPL_NAMESPACE
             soap.namespaces[:'xmlns:obj'] = OBJ_NAMESPACE
             xml = Builder::XmlMarkup.new
             yield xml
             soap.body = xml.target!
-          end
+          end          
+
           if response.success?
             response = response.to_hash[:"#{method_name}_response"]
             build_response(response)
