@@ -4,16 +4,16 @@ require 'savon'
 module ActiveMerchant
   module Billing
     module PaylineCommon
-      WEB_API_VERSION = '3'.freeze
-      
+      WEB_API_VERSION = '16'.freeze
+
       IMPL_NAMESPACE = 'http://impl.ws.payline.experian.com'.freeze
       OBJ_NAMESPACE = 'http://obj.ws.payline.experian.com'.freeze
-      
+
       LOG_FILTERED_TAGS = %w( number cvx ).freeze
-      
+
       DATE_FORMAT = "%d/%m/%Y".freeze
       DATETIME_FORMAT = "#{DATE_FORMAT} %H:%M".freeze
-      
+
       SUCCESS_MESSAGES = {
         # Card & Check
         "00000" => "Transaction approved",
@@ -26,22 +26,22 @@ module ActiveMerchant
         # Cancelling & Reauthorizing
         "02616" => "Error while creating the wallet"
       }.freeze
-      
+
       SUCCESS_CODES = SUCCESS_MESSAGES.keys.freeze
-      
+
       ACTION_CODES = {
         :authorization => 100,
         :purchase      => 101, # Authorization + Capture
         :capture       => 201
       }.freeze
-      
+
       PAYMENT_MODES = {
         :direct       => 'CPT',
         :deffered     => 'DIF',
         :installments => 'NX',
         :recurrent    => 'REC'
       }.freeze
-      
+
       # locale => ISO 639-2 code
       LANGUAGE_CODES = {
         'fr' => 'fre',
@@ -53,7 +53,7 @@ module ActiveMerchant
         'nl' => 'dut',
         'fi' => 'fin'
       }.freeze
-      
+
       RECURRING_FREQUENCIES = {
         :daily       => 10,
         :weekly      => 20,
@@ -65,7 +65,7 @@ module ActiveMerchant
         :yearly      => 80,
         :biannual    => 90
       }.freeze
-      
+
       protected
         def request(client, method_name)
           response = client.request :"#{method_name}_request" do
@@ -112,7 +112,7 @@ module ActiveMerchant
         def strict_encode64(string)
           [string].pack('m0')
         end
-        
+
         def build_response(response)
           message = message_from(result = response[:result])
           if transaction = response[:transaction]
@@ -124,30 +124,30 @@ module ActiveMerchant
             :test => test?
           })
         end
-      
+
         def message_from(result)
           message = result[:short_message]
           message << ": " << result[:long_message] unless result[:long_message] == message
           message << " (code #{result[:code]})"
           message
         end
-      
+
         def success?(result)
           SUCCESS_CODES.include?(result[:code])
         end
-      
+
         def contract_number
           options[:contract_number]
         end
-      
+
         def language_code(locale)
           LANGUAGE_CODES[locale.to_s.downcase] if locale
         end
-      
+
         def format_date(time)
           time.strftime(DATETIME_FORMAT)
         end
-        
+
         def format_boolean(boolean, default = false)
           case boolean.nil? ? default : boolean
             when true, 1
@@ -156,7 +156,7 @@ module ActiveMerchant
               0
           end
         end
-        
+
         def format_response!(response)
           unless response.delete("@xmlns") && response.empty?
             response.each do |key, value|
@@ -168,11 +168,11 @@ module ActiveMerchant
             end
           end
         end
-      
+
         def add_version(xml)
           xml.version WEB_API_VERSION
         end
-      
+
         def add_payment(xml, money, currency, action, mode = nil)
           xml.payment do
             xml.obj :action, action_code(action)
@@ -180,9 +180,10 @@ module ActiveMerchant
             xml.obj :currency, currency
             xml.obj :mode, payment_mode(mode)
             xml.obj :contractNumber, contract_number
+            xml.obj :selectedContractList, contract_number
           end
         end
-      
+
         def add_order(xml, money, currency, options)
           xml.order do
             xml.obj :ref, options[:order_id]
@@ -191,7 +192,7 @@ module ActiveMerchant
             xml.obj :date, format_date(options[:order_date] || Time.now)
           end
         end
-        
+
         def add_buyer(xml, buyer)
           xml.buyer do
             xml.obj :walletId, buyer[:wallet_id] if buyer[:wallet_id].present?
@@ -202,11 +203,11 @@ module ActiveMerchant
             xml.obj :ip, buyer[:ip] if buyer[:ip].present?
           end
         end
-        
+
         def add_address(xml, address)
-        
+
         end
-        
+
         def action_code(action)
           action = :purchase if action.blank?
           if ACTION_CODES.key?(action)
@@ -215,7 +216,7 @@ module ActiveMerchant
             action
           end
         end
-        
+
         def payment_mode(mode)
           mode = :direct if mode.blank?
           if PAYMENT_MODES.key?(mode)
