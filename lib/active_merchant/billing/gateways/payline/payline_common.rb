@@ -180,7 +180,6 @@ module ActiveMerchant
             xml.obj :currency, currency
             xml.obj :mode, payment_mode(mode)
             xml.obj :contractNumber, contract_number
-            xml.obj :selectedContractList, [contract_number]          
           end
 
           xml.selectedContractList do
