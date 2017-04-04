@@ -75,7 +75,7 @@ module ActiveMerchant
             xml = Builder::XmlMarkup.new
             yield xml
             soap.body = xml.target!
-          end          
+          end
 
           if response.success?
             response = response.to_hash[:"#{method_name}_response"]
@@ -142,6 +142,10 @@ module ActiveMerchant
           options[:contract_number]
         end
 
+        def second_contract_number
+          options[:second_contract_number]
+        end
+
         def language_code(locale)
           LANGUAGE_CODES[locale.to_s.downcase] if locale
         end
@@ -186,6 +190,7 @@ module ActiveMerchant
 
           xml.selectedContractList do
             xml.obj :selectedContract, contract_number
+            xml.obj :selectedContract, second_contract_number
           end
         end
 
